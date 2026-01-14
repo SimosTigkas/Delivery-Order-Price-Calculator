@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./domain/pricing";
 import { calculateDistanceMeters } from "./domain/distance";
 import type { DeliveryPricing } from "./domain/pricing";
@@ -129,9 +129,13 @@ export function App() {
     {result && (
       <div>
         <span data-test-id="cartValue" data-raw-value={result.cartValue}>Cart Value {(result.cartValue / 100).toFixed(2)}€</span>
+        <span> / </span>
         <span data-test-id="deliveryFee" data-raw-value={result.deliveryFee}>Delivery fee {(result.deliveryFee / 100).toFixed(2)}€</span>
+        <span> / </span>
         <span data-test-id="deliveryDistance" data-raw-value={result.deliveryDistance}>Delivery distance {result.deliveryDistance}m</span>
+        <span> / </span>
         <span data-test-id="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>Small order surcharge {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
+        <span> / </span>
         <span data-test-id="totalPrice" data-raw-value={result.totalPrice}>Total price {(result.totalPrice / 100).toFixed(2)}€</span>
       </div>
     )}
