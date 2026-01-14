@@ -15,8 +15,8 @@ export function calculateSmallOrderSurcharge(cartValue: number, orderMinimumNoSu
 }
 
 export function calculateDeliveryFee(distanceInMeters: number, pricing: DeliveryPricing): number {
-    const range = pricing.distanceRanges.find(r => distanceInMeters >= r.min && (r.max === 0 || distanceInMeters < r.max));
-    if (!range || range.max === 0)
+    const range = pricing.distanceRanges.find(r => distanceInMeters >= r.min && (r.max !== 0 && distanceInMeters < r.max));
+    if (!range)
       throw new Error("Delivery not possible for this distance");
     return pricing.basePrice + range.a + Math.round(range.b * distanceInMeters/10);
 }
