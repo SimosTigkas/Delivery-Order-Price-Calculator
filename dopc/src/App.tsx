@@ -109,37 +109,47 @@ export function App() {
       setResult(null);
     }
   }
-  return (<div>
+  return (<div className="App">
+    <div className="content">
     <h1>Delivery Order Price Calculator</h1>
     <h2>Details</h2>
-    <div>
-      <label>Venue slug<input type="text" data-test-id="venueSlug" value="home-assignment-venue-helsinki" readOnly/></label>
-    </div>
-    <div>
-      <label>Cart Value (EUR)<input type="number" data-test-id="cartValue" value={cartValue} onChange={e => setCartValue(e.target.value)} /></label>
-    </div>
-    <div>
-      <label>User latitude <input type="number" data-test-id="userLatitude" value={userLat} onChange={e => setUserLat(e.target.value)} /></label>
-    </div>
-    <div>
-      <label>User longitude <input type="number" data-test-id="userLongitude" value={userLong} onChange={e => setUserLong(e.target.value)} /></label>
+    <div className="inputs">
+        <div className="input-group">
+          <label>Venue slug</label>
+          <input type="text" data-test-id="venueSlug" value="home-assignment-venue-helsinki" readOnly/>
+        </div>
+        <div className="input-group">
+          <label>Cart Value (EUR)</label>
+          <input type="number" data-test-id="cartValue" value={cartValue} onChange={e => setCartValue(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label>User latitude (m) </label>
+          <input type="number" data-test-id="userLatitude" value={userLat} onChange={e => setUserLat(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label>User longitude (m) </label>
+          <input type="number" data-test-id="userLongitude" value={userLong} onChange={e => setUserLong(e.target.value)} />
+        </div>
     </div>
     <button data-test-id="calculateDeliveryPrice" onClick={calculationHandler}>Calculate delivery price</button>
-    {error && (<div data-test-id="error">{error}</div>)}
-    {result && (
-      <div>
-        <span data-test-id="cartValue" data-raw-value={result.cartValue}>Cart Value {(result.cartValue / 100).toFixed(2)}€</span>
-        <span> / </span>
-        <span data-test-id="deliveryFee" data-raw-value={result.deliveryFee}>Delivery fee {(result.deliveryFee / 100).toFixed(2)}€</span>
-        <span> / </span>
-        <span data-test-id="deliveryDistance" data-raw-value={result.deliveryDistance}>Delivery distance {result.deliveryDistance}m</span>
-        <span> / </span>
-        <span data-test-id="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>Small order surcharge {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
-        <span> / </span>
-        <span data-test-id="totalPrice" data-raw-value={result.totalPrice}>Total price {(result.totalPrice / 100).toFixed(2)}€</span>
-      </div>
-    )}
+      <div className="output">
+      <div className="error">{error && <span data-test-id="error">{error}</span>}</div>
+      {result && (
+        <div className="results">
+          <span data-test-id="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
+          <span> / </span>
+          <span data-test-id="deliveryFee" data-raw-value={result.deliveryFee}>Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€</span>
+          <span> / </span>
+          <span data-test-id="deliveryDistance" data-raw-value={result.deliveryDistance}>Delivery distance: {result.deliveryDistance}m</span>
+          <span> / </span>
+          <span data-test-id="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
+          <span> / </span>
+          <span data-test-id="totalPrice" data-raw-value={result.totalPrice}>Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
+        </div>
+      )}
     </div>
+    </div>
+  </div>
   );
 }
 
