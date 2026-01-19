@@ -98,6 +98,7 @@ button:hover {
 
 .output {
     min-height: 60px;
+    max-height: 80px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -114,7 +115,6 @@ button:hover {
 .results {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
     font-size: 15px;
     font-weight: 550;
     color: hsl(192, 80%, 20%);
@@ -122,5 +122,33 @@ button:hover {
     align-self: flex-start;
 }
 
-/* UserLat: 60.1699
-UserLong: 24.9384 */
+@media (max-width: 600px) {
+    .App {
+        width: 90%;
+        max-width: 459px;
+        margin: 0px auto;
+    }
+    .content {
+        gap: 4px;
+    }
+    .output {
+        font-size: 13px;
+    }
+    button {
+        font-size: 15px;
+        padding: 8px 16px;
+        margin-top: 0px;
+    }
+    .inputs {
+        gap: 6px;
+    }
+    .label {
+        font-size: 16px;
+    }
+    .input-group {
+        grid-template-columns: 1fr;
+        gap: 3px;
+    }
+
+}
+
