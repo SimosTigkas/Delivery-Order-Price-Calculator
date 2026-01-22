@@ -2,6 +2,7 @@ import { useState } from "react";
 import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./domain/pricing";
 import { calculateDistanceMeters } from "./domain/distance";
 import type { DeliveryPricing } from "./domain/pricing";
+import { validateInputs } from "./domain/validateInputs";
 
 export type VenueLocation = {
   longitude: number,
@@ -17,23 +18,26 @@ export type VenueData = {
   orderInfo: OrderInfo
 };
 
+type CalculationResult = {
+  cartValue: number;
+  smallOrderSurcharge: number;
+  deliveryFee: number;
+  deliveryDistance: number;
+  totalPrice: number;
+};
+
+
 
 export function App() {
+  const [venueDetails, setVenueDetails] = useState<VenueData | null>(null);
   const [cartValue, setCartValue] = useState("");
   const [userLat, setUserLat] = useState("");
   const [userLong, setUserLong] = useState("");
 
-  const [result, setResult] = useState<null | {
-      cartValue: number;
-      smallOrderSurcharge: number;
-      deliveryFee: number;
-      deliveryDistance: number;
-      totalPrice: number;
-  }>(null);
-
+  const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<null | string>(null);
 
-  async function getVenueDetails(): Promise<VenueData> {
+  async function fetchVenueDetails(): Promise<VenueData> {
     const venueName = "home-assignment-venue-helsinki";
     try {
       const staticData = await fetch(`https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues/${venueName}/static`);
@@ -73,24 +77,22 @@ export function App() {
   async function calculationHandler() {
     try {
       setError(null);
-      const cartValueInCents = Math.round(Number(cartValue.trim()) * 100);
+      const cartValueInCents = Math.round(Number(cartValue) * 100);
       const userLatitude = Number(userLat);
       const userLongitude = Number(userLong);
-      if (isNaN(cartValueInCents) || isNaN(userLatitude) || isNaN(userLongitude))
-        throw new Error("Invalid input");
-      if (cartValueInCents < 0)
-        throw new Error("Cart value must be positive");
-      if (userLatitude < -90 || userLatitude > 90)
-        throw new Error("Latitude must be between -90 and 90");
-      if (userLongitude < -180 || userLongitude > 180)
-        throw new Error("Longitude must be between -180 and 180");
-      const venueDetails = await getVenueDetails();
-      if (!venueDetails) {
-        throw new Error("Failed to get venue details");
+      const result = validateInputs(cartValueInCents, userLatitude, userLongitude);
+      if (!result.ok) {
+        setError(result.message);
+        setResult(null);
+        return;
       }
-      const smallOrderSurcharge = calculateSmallOrderSurcharge(cartValueInCents, venueDetails.orderInfo.orderMinimumNoSurcharge);
-      const deliveryDistance = calculateDistanceMeters(userLatitude, userLongitude, venueDetails.location.latitude, venueDetails.location.longitude);
-      const deliveryFee = calculateDeliveryFee(deliveryDistance, venueDetails.orderInfo.pricing);
+      const venue = venueDetails ?? await fetchVenueDetails();
+      if (!venueDetails)
+        setVenueDetails(venue);
+      const smallOrderSurcharge = calculateSmallOrderSurcharge(cartValueInCents, venue.orderInfo.orderMinimumNoSurcharge);
+      const deliveryDistance = calculateDistanceMeters(userLatitude, userLongitude, venue.location.latitude, venue.location.longitude);
+      const deliveryFee = calculateDeliveryFee(deliveryDistance, venue.orderInfo.pricing);
+
       setResult({
         cartValue: cartValueInCents,
         smallOrderSurcharge,
@@ -104,49 +106,49 @@ export function App() {
         setError(e.message);
       }
       else {
-        setError("Delivery is not possible for this distance");
+        setError("Invalid input");
       }
       setResult(null);
     }
   }
   return (<div className="App">
     <div className="content">
-    <h1>Delivery Order Price Calculator</h1>
-    <h2>Details</h2>
+    <h1 data-testid="deliveryOrderPriceCalculator">Delivery Order Price Calculator</h1>
+    <h2 data-testid="details">Details</h2>
     <div className="inputs">
         <div className="input-group">
           <label>Venue slug</label>
-          <input type="text" data-test-id="venueSlug" value="home-assignment-venue-helsinki" readOnly/>
+          <input type="text" data-testid="venueSlug" value="home-assignment-venue-helsinki" readOnly/>
         </div>
         <div className="input-group">
           <label>Cart Value (EUR)</label>
-          <input type="number" data-test-id="cartValue" value={cartValue} onChange={e => setCartValue(e.target.value)} />
+          <input type="number" data-testid="cartValue" value={cartValue} onChange={e => setCartValue(e.target.value)} />
         </div>
         <div className="input-group">
-          <label>User latitude (m) </label>
-          <input type="number" data-test-id="userLatitude" value={userLat} onChange={e => setUserLat(e.target.value)} />
+          <label>User latitude </label>
+          <input type="number" data-testid="userLatitude" value={userLat} onChange={e => setUserLat(e.target.value)} />
         </div>
         <div className="input-group">
-          <label>User longitude (m) </label>
-          <input type="number" data-test-id="userLongitude" value={userLong} onChange={e => setUserLong(e.target.value)} />
+          <label>User longitude </label>
+          <input type="number" data-testid="userLongitude" value={userLong} onChange={e => setUserLong(e.target.value)} />
         </div>
     </div>
-    <button data-test-id="calculateDeliveryPrice" onClick={calculationHandler}>Calculate delivery price</button>
+    <button data-testid="calculateDeliveryPrice" onClick={calculationHandler}>Calculate delivery price</button>
       <div className="output">
-      <div className="error">{error && <span data-test-id="error">{error}</span>}</div>
       {result && (
         <div className="results">
-          <span data-test-id="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
+          <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
           <span> / </span>
-          <span data-test-id="deliveryFee" data-raw-value={result.deliveryFee}>Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€</span>
+          <span data-testid="deliveryFee" data-raw-value={result.deliveryFee}>Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€</span>
           <span> / </span>
-          <span data-test-id="deliveryDistance" data-raw-value={result.deliveryDistance}>Delivery distance: {result.deliveryDistance}m</span>
+          <span data-testid="deliveryDistance" data-raw-value={result.deliveryDistance}>Delivery distance: {result.deliveryDistance}m</span>
           <span> / </span>
-          <span data-test-id="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
+          <span data-testid="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
           <span> / </span>
-          <span data-test-id="totalPrice" data-raw-value={result.totalPrice}>Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
+          <span data-testid="totalPrice" data-raw-value={result.totalPrice}>Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
         </div>
       )}
+      <div className="error">{error && <span data-testid="error">{error}</span>}</div>
     </div>
     </div>
   </div>

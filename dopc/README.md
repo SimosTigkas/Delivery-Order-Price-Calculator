@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# Delivery Order Price Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A small React application that calculates a delivery order price based on cart value, user location, and venue-specific delivery pricing.
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Install dependencies:
 
-## React Compiler
+npm install
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Start the development server:
 
-## Expanding the ESLint configuration
+npm run dev
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The application will be available at http://localhost:5173
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## How it works
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Venue data (location and delivery pricing) is fetched from the provided static and dynamic venue APIs.
+- Venue data is fetched once and cached in component state to avoid unnecessary network requests.
+- User inputs:
+  - Cart value (EUR)
+  - User latitude
+  - User longitude
+- The application calculates:
+  - Delivery distance
+  - Small order surcharge
+  - Delivery fee
+  - Total price
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Assumptions
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Cart value input is provided in euros and converted internally to cents.
+- Delivery is not possible if the calculated distance does not fall within any pricing range.
+- The venue slug is fixed to `home-assignment-venue-helsinki` as required by the assignment.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Error handling
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Invalid or missing user input results in a clear error message.
+- Network or API failures are handled gracefully and displayed to the user.
+- Delivery is rejected if the distance exceeds the supported delivery ranges.
+
+## Technical notes
+
+- Built with React and TypeScript.
+- Business logic is separated into domain modules.
+- No external state management libraries were used due to the small scope of the application.
