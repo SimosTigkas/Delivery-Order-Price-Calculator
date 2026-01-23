@@ -52,7 +52,7 @@ describe("App – validation errors", () => {
     await user.type(screen.getByTestId("userLongitude"), "25");
     await user.click(screen.getByTestId("calculateDeliveryPrice"));
     const error = await screen.findByTestId("error");
-    expect(error).toHaveTextContent("Cart value must be positive");
+    expect(error).toHaveTextContent("Please fill in all fields");
   });
 
   test("shows error for negative cart value", async () => {

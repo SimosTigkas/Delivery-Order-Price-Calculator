@@ -12,6 +12,10 @@ export function validateInputs(
     return { ok: false, message: 'Invalid input' };
   }
 
+  if (Number(cartValue) == 0 || Number(latitude) == 0 || Number(longitude) == 0) {
+    return { ok: false, message: 'Please fill in all fields' };
+  }
+
   if (cartValue <= 0) {
     return { ok: false, message: 'Cart value must be positive' };
   }

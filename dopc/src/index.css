@@ -93,7 +93,16 @@ button {
 }
 
 button:hover {
-    background-color: hsl(39, 100%, 45%);
+    background-color: hsl(39, 100%, 55%);
+    transition: background-color 1.3s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 1.3s ease;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .output {

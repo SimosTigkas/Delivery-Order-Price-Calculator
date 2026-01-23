@@ -13,6 +13,7 @@ export type OrderInfo = {
   orderMinimumNoSurcharge: number,
   pricing: DeliveryPricing
 }
+
 export type VenueData = {
   location: VenueLocation
   orderInfo: OrderInfo
@@ -26,13 +27,12 @@ type CalculationResult = {
   totalPrice: number;
 };
 
-
-
 export function App() {
   const [venueDetails, setVenueDetails] = useState<VenueData | null>(null);
   const [cartValue, setCartValue] = useState("");
   const [userLat, setUserLat] = useState("");
   const [userLong, setUserLong] = useState("");
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<null | string>(null);
@@ -41,9 +41,7 @@ export function App() {
     const venueName = "home-assignment-venue-helsinki";
     try {
       const staticData = await fetch(`https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues/${venueName}/static`);
-      if (!staticData.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (!staticData.ok) throw new Error("Network response was not ok");
       const staticJson = await staticData.json();
       const [longitude, latitude] = staticJson.venue_raw.location.coordinates;
       const venueCoordinates: VenueLocation = {
@@ -77,6 +75,7 @@ export function App() {
   async function calculationHandler() {
     try {
       setError(null);
+      const start = Date.now();
       const cartValueInCents = Math.round(Number(cartValue) * 100);
       const userLatitude = Number(userLat);
       const userLongitude = Number(userLong);
@@ -86,6 +85,7 @@ export function App() {
         setResult(null);
         return;
       }
+      setIsAnimating(true);
       const venue = venueDetails ?? await fetchVenueDetails();
       if (!venueDetails)
         setVenueDetails(venue);
@@ -100,17 +100,37 @@ export function App() {
         deliveryDistance,
         totalPrice: cartValueInCents + smallOrderSurcharge + deliveryFee
       });
+      const elapsed = Date.now() - start;
+    if (elapsed < 500) {
+      await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
+    }
     }
     catch (e) {
-      if (e instanceof Error) {
-        setError(e.message);
-      }
-      else {
-        setError("Invalid input");
-      }
+      setError(e instanceof Error ? e.message : "Invalid input");
       setResult(null);
     }
+    finally {
+      setIsAnimating(false);
+    }
   }
+  function Spinner() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: 14,
+        height: 14,
+        border: "2px solid white",
+        borderRightColor: "transparent",
+        borderRadius: "50%",
+        marginRight: 8,
+        animation: "spin 0.8s linear infinite",
+        verticalAlign: "middle"
+      }}
+    />
+  );
+}
   return (<div className="App">
     <div className="content">
     <h1 data-testid="deliveryOrderPriceCalculator">Delivery Order Price Calculator</h1>
@@ -133,8 +153,8 @@ export function App() {
           <input type="number" data-testid="userLongitude" value={userLong} onChange={e => setUserLong(e.target.value)} />
         </div>
     </div>
-    <button data-testid="calculateDeliveryPrice" onClick={calculationHandler}>Calculate delivery price</button>
-      <div className="output">
+    <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating}>{isAnimating ? (<><Spinner />Calculating…</>) : ("Calculate delivery price")}</button>
+    <div className="output">
       {result && (
         <div className="results">
           <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
