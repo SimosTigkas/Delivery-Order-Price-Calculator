@@ -39,7 +39,7 @@ h2 {
     min-height: 450px;
     width: 510px;
     box-sizing: border-box;
-    background-color: hsl(192, 80%, 58%);
+    background: linear-gradient(180deg,hsl(193, 79%, 54%) 0.000%,hsl(192, 80%, 48%) 20.000%,hsl(192, 81%, 55%) 40.000%,hsl(192, 81%, 63%) 60.000%,hsl(192, 82%, 70%) 80.000%,hsl(191, 84%, 78%) 100.000%);
     margin: 0;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(252, 252, 252, 0.3);
@@ -83,7 +83,7 @@ label {
 button {
     padding: 8px 18px;
     font-size: 15px;
-    background-color: orange;
+    background: linear-gradient(180deg, #ffa000 0.000%, #ffad02 20.000%, #ffbc20 40.000%, #ffcb50 60.000%, #ffda7f 80.000%, #ffe99d 100.000%);
     color: rgb(0, 0, 0);
     border: none;
     border-radius: 4px;
@@ -94,10 +94,10 @@ button {
 }
 
 button:hover {
-    background-color: hsl(39, 100%, 55%);
-    transition: background-color 1.3s ease-in-out;
+    background: linear-gradient(360deg, #ffa000 0.000%, #ffad02 20.000%, #ffbc20 40.000%, #ffcb50 60.000%, #ffda7f 80.000%, #ffe99d 100.000%);
+    transition: background-color 1.2s ease-in-out;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: box-shadow 1.3s ease;
+    transition: box-shadow 0.6s ease;
 }
 
 .button-group {

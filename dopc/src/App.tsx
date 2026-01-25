@@ -183,7 +183,7 @@ export function App() {
         borderRadius: "50%",
         marginRight: 8,
         animation: "spin 0.8s linear infinite",
-        verticalAlign: "middle"
+        justifyContent: "center"
       }}
     />
   );
