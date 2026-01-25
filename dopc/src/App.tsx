@@ -18,7 +18,8 @@ export function App() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [calculationError, setCalculationError] = useState<string | null>(null);
-
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   function validateField(name: string, value: string) {
     if (value === "") return "This field is required";
@@ -83,6 +84,44 @@ export function App() {
         break;
     }
   };
+
+  function getUserLocation() {
+  if (!navigator.geolocation) {
+    setLocationError("Geolocation is not supported by your browser");
+    return;
+  }
+
+  setIsGettingLocation(true);
+  setLocationError(null);
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+
+      handleChange("userLat", latitude.toString());
+      handleChange("userLong", longitude.toString());
+
+      setIsGettingLocation(false);
+    },
+    (error) => {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          setLocationError("Location permission denied");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          setLocationError("Location information is unavailable");
+          break;
+        case error.TIMEOUT:
+          setLocationError("Location request timed out");
+          break;
+        default:
+          setLocationError("Failed to retrieve location");
+      }
+      setIsGettingLocation(false);
+    }
+  );
+}
+
 
   async function calculationHandler() {
     if (!isFormValid()) return;
@@ -165,8 +204,12 @@ export function App() {
           <input type="number" data-testid="userLongitude" value={userLong} onChange={e => {handleChange("userLong", e.target.value); validateField("longitude", e.target.value);}} />
           {errors.userLong && <span className="error">{errors.userLong}</span>}
         </div>
+        <div className="button-group">
+          <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
+          {locationError && <span className="error">{locationError}</span>}
+          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || !isFormValid()}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
+        </div>
     </div>
-    <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || !isFormValid()}>{isAnimating ? (<><Spinner />Calculating…</>) : ("Calculate delivery price")}</button>
     <div className="output">
       {!isAnimating &&result && (
         <div className="results">

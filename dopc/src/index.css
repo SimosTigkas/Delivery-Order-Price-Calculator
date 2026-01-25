@@ -82,7 +82,7 @@ label {
 
 button {
     padding: 10px 20px;
-    font-size: 16px;
+    font-size: 14px;
     background-color: orange;
     color: rgb(0, 0, 0);
     border: none;
@@ -90,6 +90,7 @@ button {
     cursor: pointer;
     align-self: center;
     max-width: 250px;
+    box-sizing: border-box;
 }
 
 button:hover {
@@ -97,6 +98,14 @@ button:hover {
     transition: background-color 1.3s ease-in-out;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     transition: box-shadow 1.3s ease;
+}
+
+.button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 @keyframes spin {
@@ -157,6 +166,9 @@ button:hover {
     .input-group {
         grid-template-columns: 1fr;
         gap: 3px;
+    }
+    .button-group {
+        grid-template-columns: 1fr;
     }
 
 }
