@@ -81,7 +81,7 @@ label {
 }
 
 button {
-    padding: 10px 20px;
+    padding: 8px 18px;
     font-size: 15px;
     background-color: orange;
     color: rgb(0, 0, 0);
@@ -102,9 +102,10 @@ button:hover {
 
 .button-group {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 2fr;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     gap: 10px;
 }
 

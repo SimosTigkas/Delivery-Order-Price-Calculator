@@ -106,7 +106,7 @@ export function App() {
     (error) => {
       switch (error.code) {
         case error.PERMISSION_DENIED:
-          setLocationError("Location permission denied");
+          setLocationError("Location permission denied. Click the lock icon in the address bar to enable location access.");
           break;
         case error.POSITION_UNAVAILABLE:
           setLocationError("Location information is unavailable");
@@ -206,7 +206,6 @@ export function App() {
         </div>
         <div className="button-group">
           <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
-          {locationError && <span className="error">{locationError}</span>}
           <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || !isFormValid()}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
         </div>
     </div>
@@ -220,6 +219,7 @@ export function App() {
           <span data-testid="totalPrice" data-raw-value={result.totalPrice}>/ Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
         </div>
       )}
+      {locationError && <span className="error">{locationError}</span>}
       {calculationError && (<div className="error" data-testid="error">{calculationError}</div>)}
     </div>
     </div>
