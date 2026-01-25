@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./domain/pricing";
 import { calculateDistanceMeters } from "./domain/distance";
 import type { DeliveryPricing } from "./domain/pricing";
+
 
 export type VenueLocation = {longitude: number, latitude: number};
 export type OrderInfo = {orderMinimumNoSurcharge: number, pricing: DeliveryPricing};
@@ -90,17 +91,13 @@ export function App() {
     setLocationError("Geolocation is not supported by your browser");
     return;
   }
-
   setIsGettingLocation(true);
   setLocationError(null);
-
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const { latitude, longitude } = position.coords;
-
       handleChange("userLat", latitude.toString());
       handleChange("userLong", longitude.toString());
-
       setIsGettingLocation(false);
     },
     (error) => {
@@ -162,14 +159,25 @@ export function App() {
     }
   }
 
+  useEffect(() => {
+    if (!calculationError) return;
+
+    const timer = setTimeout(() => {
+      setCalculationError(null);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [calculationError]);
+
+
   function Spinner() {
   return (
     <span
       aria-hidden="true"
       style={{
         display: "inline-block",
-        width: 14,
-        height: 14,
+        width: 11,
+        height: 11,
         border: "2px solid white",
         borderRightColor: "transparent",
         borderRadius: "50%",
@@ -192,17 +200,14 @@ export function App() {
         <div className="input-group">
           <label>Cart Value (EUR)</label>
           <input type="number" data-testid="cartValue" value={cartValue} onChange={e => {handleChange("cartValue", e.target.value); validateField("cartValue", e.target.value);}} />
-          {errors.cartValue && <span className="error">{errors.cartValue}</span>}
         </div>
         <div className="input-group">
           <label>User latitude </label>
           <input type="number" data-testid="userLatitude" value={userLat} onChange={e => {handleChange("userLat", e.target.value); validateField("latitude", e.target.value);}} />
-          {errors.userLat && <span className="error">{errors.userLat}</span>}
         </div>
         <div className="input-group">
           <label>User longitude </label>
           <input type="number" data-testid="userLongitude" value={userLong} onChange={e => {handleChange("userLong", e.target.value); validateField("longitude", e.target.value);}} />
-          {errors.userLong && <span className="error">{errors.userLong}</span>}
         </div>
         <div className="button-group">
           <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
@@ -219,6 +224,9 @@ export function App() {
           <span data-testid="totalPrice" data-raw-value={result.totalPrice}>/ Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
         </div>
       )}
+      {errors.cartValue && <span className="error">{errors.cartValue}</span>}
+      {errors.userLat && <span className="error">{errors.userLat}</span>}
+      {errors.userLong && <span className="error">{errors.userLong}</span>}
       {locationError && <span className="error">{locationError}</span>}
       {calculationError && (<div className="error" data-testid="error">{calculationError}</div>)}
     </div>
