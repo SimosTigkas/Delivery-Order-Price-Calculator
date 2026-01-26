@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./domain/pricing";
 import { calculateDistanceMeters } from "./domain/distance";
 import type { DeliveryPricing } from "./domain/pricing";
+import Spinner from "./components/spinner";
 
 
 export type VenueLocation = {longitude: number, latitude: number};
@@ -9,6 +10,7 @@ export type OrderInfo = {orderMinimumNoSurcharge: number, pricing: DeliveryPrici
 export type VenueData = {location: VenueLocation, orderInfo: OrderInfo};
 type CalculationResult = {cartValue: number, smallOrderSurcharge: number, deliveryFee: number, deliveryDistance: number, totalPrice: number};
 type FieldErrors = {cartValue?: string, userLat?: string, userLong?: string;};
+type PersistedCalculation = {cartValue: string, userLat: string, userLong: string, result: CalculationResult;};
 
 export function App() {
   const [venueDetails, setVenueDetails] = useState<VenueData | null>(null);
@@ -21,6 +23,8 @@ export function App() {
   const [calculationError, setCalculationError] = useState<string | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [isFetchingVenue, setIsFetchingVenue] = useState(false);
+  const [venueError, setVenueError] = useState<string | null>(null);
 
   function validateField(name: string, value: string) {
     if (value === "") return "This field is required";
@@ -44,6 +48,8 @@ export function App() {
 
   async function fetchVenueDetails(): Promise<VenueData> {
     const venueName = "home-assignment-venue-helsinki";
+    setIsFetchingVenue(true);
+    setVenueError(null);
     try {
       const staticData = await fetch(`https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues/${venueName}/static`);
       if (!staticData.ok) throw new Error("Network response was not ok");
@@ -65,8 +71,12 @@ export function App() {
         }
       };
     }
-    catch {
-      throw new Error("Failed to fetch venue details");
+    catch (e) {
+      setVenueError("Failed to load venue data. Please try again.");
+      throw e;
+    }
+    finally {
+      setIsFetchingVenue(false);
     }
   }
 
@@ -137,14 +147,11 @@ export function App() {
       const smallOrderSurcharge = calculateSmallOrderSurcharge(cartValueInCents, venue.orderInfo.orderMinimumNoSurcharge);
       const deliveryDistance = calculateDistanceMeters(userLatitude, userLongitude, venue.location.latitude, venue.location.longitude);
       const deliveryFee = calculateDeliveryFee(deliveryDistance, venue.orderInfo.pricing);
+      const calculatedResult: CalculationResult = {cartValue: cartValueInCents, smallOrderSurcharge, deliveryFee, deliveryDistance, totalPrice: cartValueInCents + smallOrderSurcharge + deliveryFee};
+      setResult(calculatedResult);
+      const persisted: PersistedCalculation = {cartValue, userLat, userLong, result: calculatedResult};
+      localStorage.setItem("lastCalculation", JSON.stringify(persisted));
 
-      setResult({
-        cartValue: cartValueInCents,
-        smallOrderSurcharge,
-        deliveryFee,
-        deliveryDistance,
-        totalPrice: cartValueInCents + smallOrderSurcharge + deliveryFee
-      });
       const elapsed = Date.now() - start;
       if (elapsed < 500)
         await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
@@ -169,25 +176,24 @@ export function App() {
     return () => clearTimeout(timer);
   }, [calculationError]);
 
+  useEffect(() => {
+  const raw = localStorage.getItem("lastCalculation");
+  if (!raw) return;
+  try {
+    const saved = JSON.parse(raw) as PersistedCalculation;
+    setCartValue(saved.cartValue);
+    setUserLat(saved.userLat);
+    setUserLong(saved.userLong);
+    setResult(saved.result);
+  }
+  catch {
+    localStorage.removeItem("lastCalculation");
+      setCartValue("");
+      setUserLat("");
+      setUserLong("");
+      setResult(null);
+  }}, []);
 
-  function Spinner() {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-block",
-        width: 11,
-        height: 11,
-        border: "2px solid white",
-        borderRightColor: "transparent",
-        borderRadius: "50%",
-        marginRight: 8,
-        animation: "spin 0.8s linear infinite",
-        justifyContent: "center"
-      }}
-    />
-  );
-}
   return (<div className="App">
     <div className="content">
     <h1 data-testid="deliveryOrderPriceCalculator">Delivery Order Price Calculator</h1>
@@ -203,15 +209,15 @@ export function App() {
         </div>
         <div className="input-group">
           <label>User latitude </label>
-          <input type="number" data-testid="userLatitude" value={userLat} onChange={e => {handleChange("userLat", e.target.value); validateField("latitude", e.target.value);}} />
+          <input type="number" data-testid="userLatitude" value={userLat} onChange={e => {handleChange("userLat", e.target.value); validateField("userLat", e.target.value);}} />
         </div>
         <div className="input-group">
           <label>User longitude </label>
-          <input type="number" data-testid="userLongitude" value={userLong} onChange={e => {handleChange("userLong", e.target.value); validateField("longitude", e.target.value);}} />
+          <input type="number" data-testid="userLongitude" value={userLong} onChange={e => {handleChange("userLong", e.target.value); validateField("userLong", e.target.value);}} />
         </div>
         <div className="button-group">
           <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
-          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || !isFormValid()}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
+          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || isFetchingVenue || !isFormValid()}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
         </div>
     </div>
     <div className="output">
@@ -224,6 +230,7 @@ export function App() {
           <span data-testid="totalPrice" data-raw-value={result.totalPrice}>/ Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
         </div>
       )}
+      {venueError && <div className="error">{venueError}</div>}
       {errors.cartValue && <span className="error">{errors.cartValue}</span>}
       {errors.userLat && <span className="error">{errors.userLat}</span>}
       {errors.userLong && <span className="error">{errors.userLong}</span>}
