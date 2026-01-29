@@ -106,8 +106,8 @@ export function App() {
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const { latitude, longitude } = position.coords;
-      handleChange("userLat", latitude.toString());
-      handleChange("userLong", longitude.toString());
+      handleChange("userLat", (latitude.toFixed(4)).toString());
+      handleChange("userLong", (longitude.toFixed(4)).toString());
       setIsGettingLocation(false);
     },
     (error) => {
@@ -200,42 +200,50 @@ export function App() {
     <h2 data-testid="details">Details</h2>
     <div className="inputs">
         <div className="input-group">
-          <label>Venue slug</label>
-          <input type="text" data-testid="venueSlug" value="home-assignment-venue-helsinki" readOnly/>
+          <label htmlFor="venueSlug">Venue slug</label>
+          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-assignment-venue-helsinki" readOnly/>
         </div>
         <div className="input-group">
-          <label>Cart Value (EUR)</label>
-          <input type="number" data-testid="cartValue" value={cartValue} onChange={e => {handleChange("cartValue", e.target.value); validateField("cartValue", e.target.value);}} />
+          <label htmlFor="cartValue">Cart Value (EUR)</label>
+          <input type="number" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-error" : undefined} onChange={e => {handleChange("cartValue", e.target.value);}} />
         </div>
         <div className="input-group">
-          <label>User latitude </label>
-          <input type="number" data-testid="userLatitude" value={userLat} onChange={e => {handleChange("userLat", e.target.value); validateField("userLat", e.target.value);}} />
+          <label htmlFor="userLatitude">User latitude </label>
+          <input type="number" data-testid="userLatitude" id="userLatitude" value={userLat} aria-invalid={!!errors.userLat} aria-describedby={errors.userLat ? "userLat-error" : undefined} onChange={e => {handleChange("userLat", e.target.value);}} />
         </div>
         <div className="input-group">
-          <label>User longitude </label>
-          <input type="number" data-testid="userLongitude" value={userLong} onChange={e => {handleChange("userLong", e.target.value); validateField("userLong", e.target.value);}} />
+          <label htmlFor="userLongitude">User longitude </label>
+          <input type="number" data-testid="userLongitude" id="userLongitude" value={userLong} aria-invalid={!!errors.userLong} aria-describedby={errors.userLong ? "userLong-error" : undefined} onChange={e => {handleChange("userLong", e.target.value);}} />
         </div>
         <div className="button-group">
-          <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
-          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || isFetchingVenue || !isFormValid()}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
+          <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating} aria-busy={isGettingLocation} aria-label={isGettingLocation ? "Getting user location" : "Get location"}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
+          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || isFetchingVenue || !isFormValid()} aria-busy={isAnimating} aria-label={isAnimating ? "Calculating delivery price" : "Calculate delivery price"}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
         </div>
     </div>
     <div className="output">
-      {!isAnimating &&result && (
-        <div className="results">
-          <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
-          <span data-testid="deliveryFee" data-raw-value={result.deliveryFee}>/ Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€</span>
-          <span data-testid="deliveryDistance" data-raw-value={result.deliveryDistance}>/ Delivery distance: {result.deliveryDistance}m</span>
-          <span data-testid="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>/ Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
-          <span data-testid="totalPrice" data-raw-value={result.totalPrice}>/ Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
-        </div>
-      )}
-      {venueError && <div className="error">{venueError}</div>}
-      {errors.cartValue && <span className="error">{errors.cartValue}</span>}
-      {errors.userLat && <span className="error">{errors.userLat}</span>}
-      {errors.userLong && <span className="error">{errors.userLong}</span>}
-      {locationError && <span className="error">{locationError}</span>}
-      {calculationError && (<div className="error" data-testid="error">{calculationError}</div>)}
+      <div aria-live="polite">
+          {!isAnimating &&result && (
+            <div className="results">
+              <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
+              <span data-testid="deliveryFee" data-raw-value={result.deliveryFee}>, Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€</span>
+              <span data-testid="deliveryDistance" data-raw-value={result.deliveryDistance}>, Delivery distance: {result.deliveryDistance}m</span>
+              <span data-testid="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>, Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
+              <span data-testid="totalPrice" data-raw-value={result.totalPrice}>, Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
+            </div>
+          )}
+      </div>
+      <div aria-live="assertive">
+        {venueError && <div className="error">{venueError}</div>}
+      </div>
+      {errors.cartValue && <span id="cartValue-error" className="error">{errors.cartValue}</span>}
+      {errors.userLat && <span id="userLat-error" className="error">{errors.userLat}</span>}
+      {errors.userLong && <span id="userLong-error" className="error">{errors.userLong}</span>}
+      <div aria-live="assertive">
+        {locationError && <span className="error">{locationError}</span>}
+      </div>
+      <div aria-live="assertive">
+        {calculationError && (<div className="error" data-testid="error">{calculationError}</div>)}
+      </div>
     </div>
     </div>
   </div>
