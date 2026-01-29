@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./domain/pricing";
 import { calculateDistanceMeters } from "./domain/distance";
 import type { DeliveryPricing } from "./domain/pricing";
-import Spinner from "./components/spinner";
+import Spinner from "./components/Spinner";
 
 
 export type VenueLocation = {longitude: number, latitude: number};
