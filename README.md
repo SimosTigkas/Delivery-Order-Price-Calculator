@@ -16,11 +16,11 @@ A React + TypeScript web application that calculates a delivery order price base
 - Persistence of the last successful calculation using `localStorage`
 
 ## Getting started
-### Installation
+#### Installation
 ```bash
 npm install
 ```
-### Development
+#### Development
 ```
 npm run dev
 ```
