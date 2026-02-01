@@ -27,38 +27,38 @@ npm run dev
 The application will be available at http://localhost:5173
 
 ## How it works
-### Venue Data Fetching
+#### Venue Data Fetching
 - Venue data (location and delivery pricing) is fetched from APIs.
 - Venue data is fetched once and cached in component state to avoid unnecessary network requests.
 - Loading and error states are explicitly handled to ensure clear user feedback.
 
-### User input
+#### User input
 The user provides:
   - Cart value (EUR)
   - User latitude
   - User longitude
 Alternatively, latitude and longitude can be populated automatically using browser geolocation.
 
-### Price Calculation
+#### Price Calculation
 - Cart value is converted internally from euros to cents.
 - Delivery distance is calculated using venue and user coordinates.
 - Delivery eligibility and fees are determined using venue-specific pricing ranges.
 - If delivery is not supported for the calculated distance, an appropriate error is displayed.
 
-### Asynchronous State Management
+#### Asynchronous State Management
 The application coordinates three independent asynchronous processes:
 1. Venue data fetching
 2. Browser geolocation
 3. Delivery price calculation
 Each process has clearly defined loading, success, and error states to prevent race conditions and avoid ambiguous UI behavior.
 
-### Validation and Error Handling
+#### Validation and Error Handling
 All validation rules are defined in a single place.
 Validation is applied consistently to both user-driven input and automatic updates (such as geolocation).
 Errors are displayed in a dedicated error area to maintain layout stability and clarity.
 Network failures, invalid input, and unsupported delivery distances are handled gracefully.
 
-### State Persistence
+#### State Persistence
 The last successful calculation is stored in localStorage.
 On page reload, inputs and results are restored safely when valid.
 This allows users to continue from where they left off without re-entering all values.
