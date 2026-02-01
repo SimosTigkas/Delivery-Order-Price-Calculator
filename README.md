@@ -50,7 +50,7 @@ The application coordinates three independent asynchronous processes:
 1. Venue data fetching
 2. Browser geolocation
 3. Delivery price calculation
-Each process has clearly defined loading, success, and error states to prevent race conditions and avoid ambiguous UI behavior.
+Each process has clearly defined loading, success and error states to prevent race conditions and avoid ambiguous UI behavior.
 
 #### Validation and Error Handling
 All validation rules are defined in a single place.
@@ -66,10 +66,9 @@ This allows users to continue from where they left off without re-entering all v
 ## Assumptions
 Cart value is provided in euros and converted internally to cents.
 Delivery is rejected if the calculated distance does not fall within any supported pricing range.
-The venue slug is fixed to home-assignment-venue-helsinki, as required by the assignment.
+The venue slug is fixed to home-assignment-venue-helsinki.
 
 ## Technical Notes
 Built with React and TypeScript
 Business logic separated into domain-specific modules
-No external state management libraries used due to the limited scope
 Focus on deterministic UI behavior and production-level error handling rather than minimal implementation
