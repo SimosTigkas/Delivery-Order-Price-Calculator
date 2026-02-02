@@ -28,22 +28,48 @@ export function App() {
 
   function validateField(name: string, value: string) {
     if (value === "") return "This field is required";
-    if (name === "cartValue" && isNaN(Number(value))) return "Cart value must be a number";
-     if (name === "cartValue" && Number(value) < 0) return "Cart value cannot be negative";
-    if ((name === "userLat" || name === "userLong") && isNaN(Number(value)))
-      return "Coordinates must be numeric";
-    if (name === "userLat" && (Number(value) < -90 || Number(value) > 90))
-      return "Latitude must be between -90 and 90";
-    if (name === "userLong" && (Number(value) < -180 || Number(value) > 180))
-      return "Longitude must be between -180 and 180";
-    return "";
-  }
 
-   const isFormValid = () => {
+    if (name === "cartValue") {
+      if (isNaN(Number(value))) return "Cart value must be a number";
+      if (Number(value) < 0) return "Cart value cannot be negative";
+      if (!/^\d+(\.\d{1,2})?$/.test(value)) return "Cart value must have at most two decimals";
+    }
+    
+     if (name === "userLat") {
+      if (isNaN(Number(value))) return "Latitude must be numeric";
+      if (Number(value) < -90 || Number(value) > 90) return "Latitude must be between -90 and 90";
+    }
+
+    if (name === "userLong") {
+      if (isNaN(Number(value))) return "Longitude must be numeric";
+      if (Number(value) < -180 || Number(value) > 180) return "Longitude must be between -180 and 180";
+    }
+    return "";
+  }  
+  
+  const isFormValid = () => {
     for (const key in errors) {
       if (errors[key as keyof typeof errors]) return false;
     }
     return cartValue !== "" && userLat !== "" && userLong !== "";
+  };
+
+
+  const handleCartValueChange = (value: string) => {
+    if (!/^\d*\.?\d{0,2}$/.test(value)) return;
+    setCartValue(value);
+    if (validateField("cartValue", value))
+      setResult(null);
+    setErrors((prev) => ({ ...prev, cartValue: validateField("cartValue", value) }));
+  };
+
+  const handleCoordinateChange = (field: "userLat" | "userLong", value: string) => {
+    if (!/^-?\d*\.?\d*$/.test(value)) return;
+    if (field === "userLat") setUserLat(value);
+    else setUserLong(value);
+    if (validateField(field, value))
+      setResult(null);
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
   };
 
   async function fetchVenueDetails(): Promise<VenueData> {
@@ -80,22 +106,6 @@ export function App() {
     }
   }
 
-  const handleChange = (field: string, value: string) => {
-    const error = validateField(field, value);
-    setErrors(prev => ({ ...prev, [field]: error }));
-    switch (field) {
-      case "cartValue":
-        setCartValue(value);
-        break;
-      case "userLat":
-        setUserLat(value);
-        break;
-      case "userLong":
-        setUserLong(value);
-        break;
-    }
-  };
-
   function getUserLocation() {
   if (!navigator.geolocation) {
     setLocationError("Geolocation is not supported by your browser");
@@ -105,9 +115,8 @@ export function App() {
   setLocationError(null);
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      const { latitude, longitude } = position.coords;
-      handleChange("userLat", (latitude.toFixed(4)).toString());
-      handleChange("userLong", (longitude.toFixed(4)).toString());
+      handleCoordinateChange("userLat", position.coords.latitude.toFixed(4));
+      handleCoordinateChange("userLong", position.coords.longitude.toFixed(4));
       setIsGettingLocation(false);
     },
     (error) => {
@@ -128,7 +137,6 @@ export function App() {
     }
   );
 }
-
 
   async function calculationHandler() {
     if (!isFormValid()) return;
@@ -167,7 +175,11 @@ export function App() {
   }
 
   useEffect(() => {
-    if (!calculationError) return;
+    if (!calculationError) 
+      {
+        setResult(null);
+        return;
+      }
 
     const timer = setTimeout(() => {
       setCalculationError(null);
@@ -205,15 +217,15 @@ export function App() {
         </div>
         <div className="input-group">
           <label htmlFor="cartValue">Cart Value (EUR)</label>
-          <input type="number" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-error" : undefined} onChange={e => {handleChange("cartValue", e.target.value);}} />
+          <input type="text" inputMode="decimal" pattern="^\d+(\.\d{1,2})?$" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-error" : undefined} onChange={e => handleCartValueChange(e.target.value)} />
         </div>
         <div className="input-group">
           <label htmlFor="userLatitude">User latitude </label>
-          <input type="number" data-testid="userLatitude" id="userLatitude" value={userLat} aria-invalid={!!errors.userLat} aria-describedby={errors.userLat ? "userLat-error" : undefined} onChange={e => {handleChange("userLat", e.target.value);}} />
+          <input type="text" inputMode="decimal" data-testid="userLatitude" id="userLatitude" value={userLat} aria-invalid={!!errors.userLat} aria-describedby={errors.userLat ? "userLat-error" : undefined} onChange={e => handleCoordinateChange("userLat", e.target.value)} />
         </div>
         <div className="input-group">
           <label htmlFor="userLongitude">User longitude </label>
-          <input type="number" data-testid="userLongitude" id="userLongitude" value={userLong} aria-invalid={!!errors.userLong} aria-describedby={errors.userLong ? "userLong-error" : undefined} onChange={e => {handleChange("userLong", e.target.value);}} />
+          <input type="text" inputMode="decimal" data-testid="userLongitude" id="userLongitude" value={userLong} aria-invalid={!!errors.userLong} aria-describedby={errors.userLong ? "userLong-error" : undefined} onChange={e => handleCoordinateChange("userLong", e.target.value)} />
         </div>
         <div className="button-group">
           <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating} aria-busy={isGettingLocation} aria-label={isGettingLocation ? "Getting user location" : "Get location"}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
