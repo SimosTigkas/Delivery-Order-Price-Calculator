@@ -217,7 +217,7 @@ export function App() {
         </div>
         <div className="input-group">
           <label htmlFor="cartValue">Cart Value (EUR)</label>
-          <input type="text" inputMode="decimal" pattern="^\d+(\.\d{1,2})?$" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-error" : undefined} onChange={e => handleCartValueChange(e.target.value)} />
+          <input type="text" inputMode="decimal" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-error" : undefined} onChange={e => handleCartValueChange(e.target.value)} />
         </div>
         <div className="input-group">
           <label htmlFor="userLatitude">User latitude </label>
