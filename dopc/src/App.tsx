@@ -58,18 +58,20 @@ export function App() {
   const handleCartValueChange = (value: string) => {
     if (!/^\d*\.?\d{0,2}$/.test(value)) return;
     setCartValue(value);
-    if (validateField("cartValue", value))
-      setResult(null);
+    const error = validateField("cartValue", value);
     setErrors((prev) => ({ ...prev, cartValue: validateField("cartValue", value) }));
+    if (error)
+      setResult(null);
   };
 
   const handleCoordinateChange = (field: "userLat" | "userLong", value: string) => {
     if (!/^-?\d*\.?\d*$/.test(value)) return;
     if (field === "userLat") setUserLat(value);
     else setUserLong(value);
-    if (validateField(field, value))
-      setResult(null);
+    const error = validateField(field, value);
     setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
+    if (error)
+      setResult(null);
   };
 
   async function fetchVenueDetails(): Promise<VenueData> {
@@ -213,19 +215,23 @@ export function App() {
     <div className="inputs">
         <div className="input-group">
           <label htmlFor="venueSlug">Venue slug</label>
-          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-assignment-venue-helsinki" readOnly/>
+          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-assignment-venue-helsinki" readOnly aria-describedby="venueSlug-hint"/>
+          <small id="venueSlug-hint">Fixed venue identifier required by the assignment</small>
         </div>
         <div className="input-group">
           <label htmlFor="cartValue">Cart Value (EUR)</label>
-          <input type="text" inputMode="decimal" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-error" : undefined} onChange={e => handleCartValueChange(e.target.value)} />
+          <input type="text" inputMode="decimal" data-testid="cartValue" id="cartValue" value={cartValue} aria-invalid={!!errors.cartValue} aria-describedby={errors.cartValue ? "cartValue-hint cartValue-error" : "cartValue-hint"} onChange={e => handleCartValueChange(e.target.value)} />
+          <small id="cartValue-hint">Enter a positive amount in euros (up to 2 decimal places)</small>
         </div>
         <div className="input-group">
           <label htmlFor="userLatitude">User latitude </label>
-          <input type="text" inputMode="decimal" data-testid="userLatitude" id="userLatitude" value={userLat} aria-invalid={!!errors.userLat} aria-describedby={errors.userLat ? "userLat-error" : undefined} onChange={e => handleCoordinateChange("userLat", e.target.value)} />
+          <input type="text" inputMode="decimal" data-testid="userLatitude" id="userLatitude" value={userLat} aria-invalid={!!errors.userLat} aria-describedby={errors.userLat ? "userLat-hint userLat-error" : "userLat-hint"} onChange={e => handleCoordinateChange("userLat", e.target.value)} />
+          <small id="userLat-hint">Latitude must be a number between -90 and 90</small>
         </div>
         <div className="input-group">
           <label htmlFor="userLongitude">User longitude </label>
-          <input type="text" inputMode="decimal" data-testid="userLongitude" id="userLongitude" value={userLong} aria-invalid={!!errors.userLong} aria-describedby={errors.userLong ? "userLong-error" : undefined} onChange={e => handleCoordinateChange("userLong", e.target.value)} />
+          <input type="text" inputMode="decimal" data-testid="userLongitude" id="userLongitude" value={userLong} aria-invalid={!!errors.userLong} aria-describedby={errors.userLong ? "userLong-hint userLong-error" : "userLong-hint"} onChange={e => handleCoordinateChange("userLong", e.target.value)} />
+          <small id="userLong-hint">Longitude must be a number between -180 and 180</small>
         </div>
         <div className="button-group">
           <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating} aria-busy={isGettingLocation} aria-label={isGettingLocation ? "Getting user location" : "Get location"}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
