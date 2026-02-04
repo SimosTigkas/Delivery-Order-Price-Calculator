@@ -75,7 +75,7 @@ export function App() {
   };
 
   async function fetchVenueDetails(): Promise<VenueData> {
-    const venueName = "home-venue-helsinki";
+    const venueName = "home-assignment-venue-helsinki";
     setIsFetchingVenue(true);
     setVenueError(null);
     try {
@@ -215,7 +215,7 @@ export function App() {
     <div className="inputs">
         <div className="input-group">
           <label htmlFor="venueSlug">Venue slug</label>
-          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-venue-helsinki" readOnly aria-describedby="venueSlug-hint"/>
+          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-assignment-venue-helsinki" readOnly aria-describedby="venueSlug-hint"/>
           <small id="venueSlug-hint">Fixed venue identifier</small>
         </div>
         <div className="input-group">
