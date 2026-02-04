@@ -75,7 +75,7 @@ export function App() {
   };
 
   async function fetchVenueDetails(): Promise<VenueData> {
-    const venueName = "home-assignment-venue-helsinki";
+    const venueName = "home-venue-helsinki";
     setIsFetchingVenue(true);
     setVenueError(null);
     try {
@@ -215,8 +215,8 @@ export function App() {
     <div className="inputs">
         <div className="input-group">
           <label htmlFor="venueSlug">Venue slug</label>
-          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-assignment-venue-helsinki" readOnly aria-describedby="venueSlug-hint"/>
-          <small id="venueSlug-hint">Fixed venue identifier required by the assignment</small>
+          <input type="text" data-testid="venueSlug" id="venueSlug" value="home-venue-helsinki" readOnly aria-describedby="venueSlug-hint"/>
+          <small id="venueSlug-hint">Fixed venue identifier</small>
         </div>
         <div className="input-group">
           <label htmlFor="cartValue">Cart Value (EUR)</label>
@@ -234,34 +234,26 @@ export function App() {
           <small id="userLong-hint">Longitude must be a number between -180 and 180</small>
         </div>
         <div className="button-group">
-          <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating} aria-busy={isGettingLocation} aria-label={isGettingLocation ? "Getting user location" : "Get location"}>{isGettingLocation ? (<><Spinner /></>) : ("Get location")}</button>
-          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || isFetchingVenue || !isFormValid()} aria-busy={isAnimating} aria-label={isAnimating ? "Calculating delivery price" : "Calculate delivery price"}>{isAnimating ? (<><Spinner /></>) : ("Calculate delivery price")}</button>
+          <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating} aria-busy={isGettingLocation} aria-label={isGettingLocation ? "Getting user location" : "Get location"}>{isGettingLocation ? (<><Spinner/>Loading..</>) : ("Get location")}</button>
+          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || isFetchingVenue || !isFormValid()} aria-busy={isAnimating} aria-label={isAnimating ? "Calculating delivery price" : "Calculate delivery price"}>{isAnimating ? (<><Spinner />Loading..</>) : ("Calculate delivery price")}</button>
         </div>
     </div>
     <div className="output">
-      <div aria-live="polite">
-          {!isAnimating &&result && (
-            <div className="results">
-              <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€</span>
-              <span data-testid="deliveryFee" data-raw-value={result.deliveryFee}>, Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€</span>
-              <span data-testid="deliveryDistance" data-raw-value={result.deliveryDistance}>, Delivery distance: {result.deliveryDistance}m</span>
-              <span data-testid="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}>, Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€</span>
-              <span data-testid="totalPrice" data-raw-value={result.totalPrice}>, Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
-            </div>
-          )}
-      </div>
-      <div aria-live="assertive">
-        {venueError && <div className="error">{venueError}</div>}
-      </div>
-      {errors.cartValue && <span id="cartValue-error" className="error">{errors.cartValue}</span>}
-      {errors.userLat && <span id="userLat-error" className="error">{errors.userLat}</span>}
-      {errors.userLong && <span id="userLong-error" className="error">{errors.userLong}</span>}
-      <div aria-live="assertive">
-        {locationError && <span className="error">{locationError}</span>}
-      </div>
-      <div aria-live="assertive">
-        {calculationError && (<div className="error" data-testid="error">{calculationError}</div>)}
-      </div>
+      {!isAnimating && result && (
+        <div role="status" className="results">
+          <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€ /</span>
+          <span data-testid="deliveryFee" data-raw-value={result.deliveryFee}> Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€ /</span>
+          <span data-testid="deliveryDistance" data-raw-value={result.deliveryDistance}> Delivery distance: {result.deliveryDistance}m /</span>
+          <span data-testid="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}> Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€ /</span>
+          <span data-testid="totalPrice" data-raw-value={result.totalPrice}> Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
+        </div>
+      )}
+      {venueError && <div role="alert" className="error">{venueError}</div>}
+      {errors.cartValue && <span role="alert" id="cartValue-error" className="error">{errors.cartValue}</span>}
+      {errors.userLat && <span role="alert" id="userLat-error" className="error">{errors.userLat}</span>}
+      {errors.userLong && <span role="alert" id="userLong-error" className="error">{errors.userLong}</span>}
+      {locationError && <span role="alert" className="error">{locationError}</span>}
+      {calculationError && (<div role="alert" className="error" data-testid="error">{calculationError}</div>)}
     </div>
     </div>
   </div>
