@@ -10,7 +10,7 @@ export type OrderInfo = {orderMinimumNoSurcharge: number, pricing: DeliveryPrici
 export type VenueData = {location: VenueLocation, orderInfo: OrderInfo};
 type CalculationResult = {cartValue: number, smallOrderSurcharge: number, deliveryFee: number, deliveryDistance: number, totalPrice: number};
 type FieldErrors = {cartValue?: string, userLat?: string, userLong?: string;};
-type PersistedCalculation = {cartValue: string, userLat: string, userLong: string, result: CalculationResult;};
+type PersistedCalculation = {cartValue: string, userLat: string, userLong: string;};
 
 export function App() {
   const [venueDetails, setVenueDetails] = useState<VenueData | null>(null);
@@ -159,7 +159,7 @@ export function App() {
       const deliveryFee = calculateDeliveryFee(deliveryDistance, venue.orderInfo.pricing);
       const calculatedResult: CalculationResult = {cartValue: cartValueInCents, smallOrderSurcharge, deliveryFee, deliveryDistance, totalPrice: cartValueInCents + smallOrderSurcharge + deliveryFee};
       setResult(calculatedResult);
-      const persisted: PersistedCalculation = {cartValue, userLat, userLong, result: calculatedResult};
+      const persisted: PersistedCalculation = {cartValue, userLat, userLong};
       localStorage.setItem("lastCalculation", JSON.stringify(persisted));
 
       const elapsed = Date.now() - start;
@@ -198,7 +198,7 @@ export function App() {
     setCartValue(saved.cartValue);
     setUserLat(saved.userLat);
     setUserLong(saved.userLong);
-    setResult(saved.result);
+    setResult(null);
   }
   catch {
     localStorage.removeItem("lastCalculation");
@@ -239,20 +239,24 @@ export function App() {
         </div>
     </div>
     <div className="output">
-      {!isAnimating && result && (
-        <div role="status" className="results">
-          <span data-testid="cartValue" data-raw-value={result.cartValue}>Cart Value: {(result.cartValue / 100).toFixed(2)}€ /</span>
-          <span data-testid="deliveryFee" data-raw-value={result.deliveryFee}> Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€ /</span>
-          <span data-testid="deliveryDistance" data-raw-value={result.deliveryDistance}> Delivery distance: {result.deliveryDistance}m /</span>
-          <span data-testid="smallOrderSurcharge" data-raw-value={result.smallOrderSurcharge}> Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€ /</span>
-          <span data-testid="totalPrice" data-raw-value={result.totalPrice}> Total price: {(result.totalPrice / 100).toFixed(2)}€</span>
-        </div>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true" className="results">
+      {!isAnimating && result ? (
+        <>
+          <p>
+            Cart Value: {(result.cartValue / 100).toFixed(2)}€,
+            Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€,
+            Delivery distance: {result.deliveryDistance}m,
+            Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€,
+            Total price: {(result.totalPrice / 100).toFixed(2)}€
+          </p>
+        </>
+        ) : (null)}
+      </div>
       {venueError && <div role="alert" className="error">{venueError}</div>}
-      {errors.cartValue && <span role="alert" id="cartValue-error" className="error">{errors.cartValue}</span>}
-      {errors.userLat && <span role="alert" id="userLat-error" className="error">{errors.userLat}</span>}
-      {errors.userLong && <span role="alert" id="userLong-error" className="error">{errors.userLong}</span>}
-      {locationError && <span role="alert" className="error">{locationError}</span>}
+      {errors.cartValue && <span id="cartValue-error" className="error">{errors.cartValue}</span>}
+      {errors.userLat && <span id="userLat-error" className="error">{errors.userLat}</span>}
+      {errors.userLong && <span id="userLong-error" className="error">{errors.userLong}</span>}
+      {locationError && <span className="error">{locationError}</span>}
       {calculationError && (<div role="alert" className="error" data-testid="error">{calculationError}</div>)}
     </div>
     </div>
