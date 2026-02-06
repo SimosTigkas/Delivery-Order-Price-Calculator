@@ -55,6 +55,10 @@ export function App() {
     return cartValue !== "" && userLat !== "" && userLong !== "";
   };
 
+  const priceFormatter = new Intl.NumberFormat("fi-FI", {
+    style: "currency",
+    currency: "EUR",
+  });
 
   const handleCartValueChange = (value: string) => {
     if (!/^\d*\.?\d{0,2}$/.test(value)) return;
@@ -244,11 +248,11 @@ export function App() {
       {!isAnimating && result ? (
         <>
           <p>
-            Cart Value: {(result.cartValue / 100).toFixed(2)}€,
-            Delivery fee: {(result.deliveryFee / 100).toFixed(2)}€,
+            Cart Value: {priceFormatter.format(result.cartValue / 100)},
+            Delivery fee: {priceFormatter.format(result.deliveryFee / 100)},
             Delivery distance: {result.deliveryDistance}m,
-            Small order surcharge: {(result.smallOrderSurcharge / 100).toFixed(2)}€,
-            Total price: {(result.totalPrice / 100).toFixed(2)}€
+            Small order surcharge: {priceFormatter.format(result.smallOrderSurcharge / 100)},
+            Total price: {priceFormatter.format(result.totalPrice / 100)}
           </p>
         </>
         ) : (null)}
