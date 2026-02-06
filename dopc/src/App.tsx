@@ -55,10 +55,7 @@ export function App() {
     return cartValue !== "" && userLat !== "" && userLong !== "";
   };
 
-  const priceFormatter = new Intl.NumberFormat("fi-FI", {
-    style: "currency",
-    currency: "EUR",
-  });
+  const priceFormatter = new Intl.NumberFormat("fi-FI", {style: "currency", currency: "EUR"});
 
   const handleCartValueChange = (value: string) => {
     if (!/^\d*\.?\d{0,2}$/.test(value)) return;
@@ -187,7 +184,6 @@ export function App() {
         setResult(null);
         return;
       }
-
     const timer = setTimeout(() => {
       setCalculationError(null);
     }, 3000);
