@@ -1,52 +1,27 @@
 import { useEffect, useState } from "react";
-import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./domain/pricing";
-import { calculateDistanceMeters } from "./domain/distance";
-import type { DeliveryPricing } from "./domain/pricing";
+import { calculateDeliveryFee, calculateSmallOrderSurcharge } from "./utils/pricing";
+import { calculateDistanceMeters } from "./utils/distance";
 import Spinner from "./components/Spinner";
+import type { PersistedCalculation, VenueData, CalculationResult, FieldErrors} from "./types";
+import { validateField } from "./utils/validation";
+import { fetchVenueDetails } from "./services/venueService"
+import { VenueFetchError } from "./services/venueService";
+import { DeliveryFeeCalculationError } from "./utils/pricing";
 
-
-export type VenueLocation = {longitude: number, latitude: number};
-export type OrderInfo = {orderMinimumNoSurcharge: number, pricing: DeliveryPricing};
-export type VenueData = {location: VenueLocation, orderInfo: OrderInfo};
-type CalculationResult = {cartValue: number, smallOrderSurcharge: number, deliveryFee: number, deliveryDistance: number, totalPrice: number};
-type FieldErrors = {cartValue?: string, userLat?: string, userLong?: string;};
-type PersistedCalculation = {cartValue: string, userLat: string, userLong: string;};
+const venueName = "home-assignment-venue-helsinki";
 
 export function App() {
   const [venueDetails, setVenueDetails] = useState<VenueData | null>(null);
   const [cartValue, setCartValue] = useState("");
   const [userLat, setUserLat] = useState("");
   const [userLong, setUserLong] = useState("");
-  const [isAnimating, setIsAnimating] = useState(false);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [calculationError, setCalculationError] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [calculationError, setCalculationError] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [isFetchingVenue, setIsFetchingVenue] = useState(false);
   const [venueError, setVenueError] = useState<string | null>(null);
-
-  function validateField(name: string, value: string): string | null {
-    if (name === "cartValue") {
-      if (value === "") return "Cart value is required";
-      if (isNaN(Number(value))) return "Cart value must be a number";
-      if (Number(value) < 0) return "Cart value cannot be negative";
-      if (!/^\d+(\.\d{1,2})?$/.test(value)) return "Cart value must have at most two decimals";
-    }
-    
-     if (name === "userLat") {
-      if (value === "") return "Latitude is required";
-      if (isNaN(Number(value))) return "Latitude must be numeric";
-      if (Number(value) < -90 || Number(value) > 90) return "Latitude must be between -90 and 90";
-    }
-
-    if (name === "userLong") {
-      if (value === "") return "Longitude is required";
-      if (isNaN(Number(value))) return "Longitude must be numeric";
-      if (Number(value) < -180 || Number(value) > 180) return "Longitude must be between -180 and 180";
-    }
-    return null;
-  }  
   
   const isFormValid = () => {
     for (const key in errors) {
@@ -58,12 +33,13 @@ export function App() {
   const priceFormatter = new Intl.NumberFormat("fi-FI", {style: "currency", currency: "EUR"});
 
   const handleCartValueChange = (value: string) => {
-    if (!/^\d*\.?\d{0,2}$/.test(value)) return;
-    setCartValue(value);
-    const error = validateField("cartValue", value);
-    setErrors((prev) => ({ ...prev, cartValue: validateField("cartValue", value) || undefined}));
-    if (error)
-      setResult(null);
+    if (/^-?\d*\.?\d{0,2}$/.test(value)) {
+      setCartValue(value);
+      const error = validateField("cartValue", value);
+      setErrors((prev) => ({ ...prev, cartValue: validateField("cartValue", value) || undefined}));
+      if (error)
+        setResult(null);
+    }
   };
 
   const handleCoordinateChange = (field: "userLat" | "userLong", value: string) => {
@@ -71,44 +47,9 @@ export function App() {
     if (field === "userLat") setUserLat(value);
     else setUserLong(value);
     const error = validateField(field, value);
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
-    if (error)
-      setResult(null);
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, value) || undefined}));
+    if (error) setResult(null);
   };
-
-  async function fetchVenueDetails(): Promise<VenueData> {
-    const venueName = "home-assignment-venue-helsinki";
-    setIsFetchingVenue(true);
-    setVenueError(null);
-    try {
-      const staticData = await fetch(`https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues/${venueName}/static`);
-      if (!staticData.ok) throw new Error("Network response was not ok");
-      const staticJson = await staticData.json();
-      const [longitude, latitude] = staticJson.venue_raw.location.coordinates;
-      const dynamicData = await fetch(`https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues/${venueName}/dynamic`);
-      if (!dynamicData.ok)
-        throw new Error("Network response was not ok");
-      const dynamicDataJson = await dynamicData.json();
-      const specs = dynamicDataJson.venue_raw.delivery_specs;
-      return {
-        location: {latitude, longitude},
-        orderInfo: {
-          orderMinimumNoSurcharge: specs.order_minimum_no_surcharge,
-          pricing: {
-            basePrice: specs.delivery_pricing.base_price,
-            distanceRanges: specs.delivery_pricing.distance_ranges
-          }
-        }
-      };
-    }
-    catch (e) {
-      setVenueError("Failed to load venue data. Please try again.");
-      throw e;
-    }
-    finally {
-      setIsFetchingVenue(false);
-    }
-  }
 
   function getUserLocation() {
   if (!navigator.geolocation) {
@@ -146,16 +87,15 @@ export function App() {
     if (!isFormValid()) return;
     setResult(null);
     setIsAnimating(true);
+    setCalculationError(null);
+    setVenueError(null);
     try {
-      const venue = venueDetails ?? await fetchVenueDetails();
+      const venue = venueDetails ?? (await fetchVenueDetails(venueName));
+      setVenueDetails(venue);
       const start = Date.now();
       const cartValueInCents = Math.round(Number(cartValue) * 100);
       const userLatitude = Number(userLat);
       const userLongitude = Number(userLong);
-      
-      setCalculationError(null);
-      if (!venueDetails)
-        setVenueDetails(venue);
       const smallOrderSurcharge = calculateSmallOrderSurcharge(cartValueInCents, venue.orderInfo.orderMinimumNoSurcharge);
       const deliveryDistance = calculateDistanceMeters(userLatitude, userLongitude, venue.location.latitude, venue.location.longitude);
       const deliveryFee = calculateDeliveryFee(deliveryDistance, venue.orderInfo.pricing);
@@ -163,14 +103,17 @@ export function App() {
       setResult(calculatedResult);
       const persisted: PersistedCalculation = {cartValue, userLat, userLong};
       localStorage.setItem("lastCalculation", JSON.stringify(persisted));
-
       const elapsed = Date.now() - start;
       if (elapsed < 500)
         await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
     }
-    catch (e) {
-      console.log(e);
-      setCalculationError("Delivery is not available for this distance");
+    catch (error){
+      if (error instanceof DeliveryFeeCalculationError)
+        setCalculationError("Delivery is not possible for this distance");
+      else if (error instanceof VenueFetchError)
+        setVenueError("Failed to load venue data");
+      else
+        setCalculationError("Calculation failed");
       setResult(null);
     }
     finally {
@@ -236,7 +179,7 @@ export function App() {
         </div>
         <div className="button-group">
           <button data-testid="getUserLocation" onClick={getUserLocation} disabled={isGettingLocation || isAnimating} aria-busy={isGettingLocation} aria-label={isGettingLocation ? "Getting user location" : "Get location"}>{isGettingLocation ? (<><Spinner/>Loading..</>) : ("Get location")}</button>
-          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || isFetchingVenue || !isFormValid()} aria-busy={isAnimating} aria-label={isAnimating ? "Calculating delivery price" : "Calculate delivery price"}>{isAnimating ? (<><Spinner />Loading..</>) : ("Calculate delivery price")}</button>
+          <button data-testid="calculateDeliveryPrice" onClick={calculationHandler} disabled={isAnimating || !isFormValid()} aria-busy={isAnimating} aria-label={isAnimating ? "Calculating delivery price" : "Calculate delivery price"}>{isAnimating ? (<><Spinner />Loading..</>) : ("Calculate delivery price")}</button>
         </div>
     </div>
     <div className="output">
@@ -253,12 +196,14 @@ export function App() {
         </>
         ) : (null)}
       </div>
-      {venueError && <div role="alert" className="error">{venueError}</div>}
-      {errors.cartValue && <span id="cartValue-error" className="error">{errors.cartValue}</span>}
-      {errors.userLat && <span id="userLat-error" className="error">{errors.userLat}</span>}
-      {errors.userLong && <span id="userLong-error" className="error">{errors.userLong}</span>}
-      {locationError && <span className="error">{locationError}</span>}
-      {calculationError && (<div role="alert" className="error" data-testid="error">{calculationError}</div>)}
+      <div className="errorGroup">
+        {venueError && <div role="alert" className="error">{venueError}</div>}
+        {errors.cartValue && <span id="cartValue-error" className="error">{errors.cartValue}</span>}
+        {errors.userLat && <span id="userLat-error" className="error">{errors.userLat}</span>}
+        {errors.userLong && <span id="userLong-error" className="error">{errors.userLong}</span>}
+        {locationError && <span className="error">{locationError}</span>}
+        {calculationError && (<div role="alert" className="error" data-testid="error">{calculationError}</div>)}
+      </div>
     </div>
     </div>
   </div>
