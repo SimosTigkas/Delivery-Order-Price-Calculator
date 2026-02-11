@@ -196,13 +196,13 @@ export function App() {
         </>
         ) : (null)}
       </div>
-      <div className="errorGroup">
-        {venueError && <div role="alert" className="error">{venueError}</div>}
+      <div className="errorGroup" aria-live="assertive" aria-atomic="true">
+        {venueError && <div className="error">{venueError}</div>}
         {errors.cartValue && <span id="cartValue-error" className="error">{errors.cartValue}</span>}
         {errors.userLat && <span id="userLat-error" className="error">{errors.userLat}</span>}
         {errors.userLong && <span id="userLong-error" className="error">{errors.userLong}</span>}
-        {locationError && <span className="error">{locationError}</span>}
-        {calculationError && (<div role="alert" className="error" data-testid="error">{calculationError}</div>)}
+        {locationError && <span id="location-error" className="error">{locationError}</span>}
+        {calculationError && (<div className="error" data-testid="error">{calculationError}</div>)}
       </div>
     </div>
     </div>
