@@ -1,6 +1,6 @@
 # Delivery Order Price Calculator
 
-A React + TypeScript web application that calculates a delivery order price based on cart value, user location and venue-specific delivery pricing rules. This main emphasis on correctness, predictable UI behavior and production-grade asynchronous state handling.
+A React + TypeScript web application that calculates a delivery order price based on cart value, user location and venue-specific delivery pricing rules. The main emphasis is on correctness, predictable UI behavior and production-grade asynchronous state handling.
 
 ## Features
 
